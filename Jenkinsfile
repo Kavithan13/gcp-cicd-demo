@@ -22,6 +22,23 @@ pipeline {
             }
         }
 
+        
+        stage('Vulnerability Scan') {
+            steps {
+                sh """
+                # Install trivy if not already installed
+                if ! command -v trivy &> /dev/null
+                then
+                    echo "Installing Trivy..."
+                    curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
+                fi
+
+                # Run scan
+                ./bin/trivy image ${IMAGE_NAME}:latest --severity CRITICAL,HIGH --exit-code 1 --no-progress
+                """
+            }
+        }
+
         stage('Authenticate GCP') {
             steps {
                 withCredentials([file(credentialsId: 'gcp-sa-key', variable: 'GOOGLE_KEY')]) {
@@ -60,4 +77,3 @@ pipeline {
         }
     }
 }
-
