@@ -22,7 +22,7 @@ pipeline {
             }
         }
 
-        // ✅ Vulnerability Scan (Trivy)
+        // ✅ Security Gate: Trivy Scan
         stage('Vulnerability Scan') {
             steps {
                 sh """
@@ -46,29 +46,43 @@ pipeline {
             }
         }
 
-        stage('Push Image') {
+        stage('Tag & Push Image') {
             steps {
-                sh """
-                gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
+                script {
+                    def BUILD_TAG = "${BUILD_NUMBER}"
 
-                docker tag ${IMAGE_NAME}:latest \
-                ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_NAME}:latest
+                    sh """
+                    gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
 
-                docker push \
-                ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_NAME}:latest
-                """
+                    # ✅ Tag with build number
+                    docker tag ${IMAGE_NAME}:latest \
+                    ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_NAME}:${BUILD_TAG}
+
+                    # ✅ Also keep latest tag
+                    docker tag ${IMAGE_NAME}:latest \
+                    ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_NAME}:latest
+
+                    # ✅ Push both
+                    docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_NAME}:${BUILD_TAG}
+                    docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_NAME}:latest
+                    """
+                }
             }
         }
 
-        stage('Deploy Cloud Run') {
+        stage('Deploy to Cloud Run') {
             steps {
-                sh """
-                gcloud run deploy ${IMAGE_NAME} \
-                --image ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_NAME}:latest \
-                --platform managed \
-                --region ${REGION} \
-                --allow-unauthenticated
-                """
+                script {
+                    def BUILD_TAG = "${BUILD_NUMBER}"
+
+                    sh """
+                    gcloud run deploy ${IMAGE_NAME} \
+                    --image ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_NAME}:${BUILD_TAG} \
+                    --platform managed \
+                    --region ${REGION} \
+                    --allow-unauthenticated
+                    """
+                }
             }
         }
     }
