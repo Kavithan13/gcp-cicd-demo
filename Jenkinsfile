@@ -22,7 +22,7 @@ pipeline {
             }
         }
 
-        // ✅ NEW STAGE: Vulnerability Scan using Trivy
+        
         stage('Vulnerability Scan') {
             steps {
                 sh """
