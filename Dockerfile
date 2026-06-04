@@ -2,10 +2,7 @@ FROM python:3.11-alpine
 
 WORKDIR /app
 
-RUN apt-get update && apt-get upgrade -y && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
-RUN apt-get purge -y perl && apt-get autoremove -y
+RUN apk update && apk upgrade
 
 COPY . .
 
