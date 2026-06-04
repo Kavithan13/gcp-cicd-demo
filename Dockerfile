@@ -2,7 +2,6 @@ FROM python:3.11-alpine
 
 WORKDIR /app
 
-# Update OS
 RUN apt-get update && apt-get upgrade -y && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
