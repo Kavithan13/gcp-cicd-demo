@@ -74,6 +74,7 @@ Security is implemented using image scanning in the CI/CD pipeline.
 
 ```bash
 trivy image <image-name>
+
 ---
 
 ## 💰 Cost Optimization
